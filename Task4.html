@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>All‑in‑One Mini App</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin:0; padding:0; }
+    nav { background:#333; padding:10px; text-align:center; }
+    nav button { color:white; background:none; border:none; margin:0 5px; cursor:pointer; }
+
+    section { padding:20px; display:none; }
+    section.active { display:block; }
+
+    h2 { margin-top:0; }
+
+    /* Portfolio Gallery */
+    .btn { padding:10px 15px; border:none; cursor:pointer; margin:5px; }
+    .btn.active, .btn:hover { background:#666; color:white; }
+    .row { display:flex; flex-wrap:wrap; margin:-8px; }
+    .column { flex:1 0 30%; max-width:30%; padding:8px; box-sizing:border-box;
+      visibility:hidden; height:0; transition: all 0.4s ease; }
+    .column.show { visibility:visible; height:auto; }
+    .content { background:#f4f4f4; padding:10px; }
+
+    /* To‑Do */
+    #todo-list li { padding:8px; border-bottom:1px solid #ddd; display:flex; justify-content:space-between; }
+    .completed span { text-decoration:line-through; color:gray; }
+
+    /* Products */
+    .product { display:inline-block; width:150px; margin:0 10px 10px 0;
+      border:1px solid #ccc; padding:10px; box-sizing:border-box; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <button onclick="show('portfolio')">Portfolio</button>
+  <button onclick="show('todo')">To‑Do</button>
+  <button onclick="show('products')">Products</button>
+</nav>
+
+<!-- Portfolio -->
+<section id="portfolio" class="active">
+  <h2>Portfolio Gallery</h2>
+  <div id="filterBtns">
+    <button class="btn active" onclick="filterSelection('all')">Show All</button>
+    <button class="btn" onclick="filterSelection('nature')">Nature</button>
+    <button class="btn" onclick="filterSelection('cars')">Cars</button>
+    <button class="btn" onclick="filterSelection('people')">People</button>
+  </div>
+  <div class="row">
+    <div class="column nature show"><div class="content"><h4>Mountains</h4><p>Nature</p></div></div>
+    <div class="column cars show"><div class="content"><h4>Retro Car</h4><p>Cars</p></div></div>
+    <div class="column people show"><div class="content"><h4>Person</h4><p>People</p></div></div>
+    <!-- Add more items... -->
+  </div>
+</section>
+
+<!-- To‑Do List -->
+<section id="todo">
+  <h2>To‑Do List</h2>
+  <input type="text" id="todo-input" placeholder="Add task…">
+  <button onclick="addTodo()">Add</button>
+  <ul id="todo-list"></ul>
+</section>
+
+<!-- Products -->
+<section id="products">
+  <h2>Product Listing</h2>
+  <label>
+    Filter:
+    <select id="catFilter" onchange="renderProducts()">
+      <option value="all">All</option>
+      <option value="book">Book</option>
+      <option value="tool">Tool</option>
+    </select>
+  </label>
+  <label>
+    Sort:
+    <select id="priceSort" onchange="renderProducts()">
+      <option value="none">None</option>
+      <option value="asc">Price ↑</option>
+      <option value="desc">Price ↓</option>
+    </select>
+  </label>
+  <div id="product-list"></div>
+</section>
+
+<script>
+// Section Switcher
+function show(id) {
+  ['portfolio','todo','products'].forEach(s => {
+    document.getElementById(s).classList.toggle('active', s === id);
+  });
+}
+
+// Portfolio Filter (based on W3Schools) :contentReference[oaicite:5]{index=5}
+filterSelection('all');
+function filterSelection(c) {
+  let cols = document.getElementsByClassName('column');
+  for (let i = 0; i < cols.length; i++) {
+    let el = cols[i];
+    el.classList.remove('show');
+    if (c === 'all' || el.classList.contains(c)) {
+      el.classList.add('show');
+    }
+  }
+  // Update active button
+  document.querySelectorAll('#filterBtns .btn').forEach(b =>
+    b.classList.toggle('active', b.textContent.toLowerCase().includes(c))
+  );
+}
+
+// To‑Do with localStorage
+let todos = JSON.parse(localStorage.getItem('todos') || '[]');
+function renderTodo() {
+  let ul = document.getElementById('todo-list');
+  ul.innerHTML = '';
+  todos.forEach((t,i) => {
+    let li = document.createElement('li');
+    li.className = t.done ? 'completed' : '';
+    li.innerHTML = `<span onclick="toggle(${i})">${t.text}</span>
+      <button onclick="del(${i})">✖</button>`;
+    ul.appendChild(li);
+  });
+}
+function addTodo() {
+  let txt = document.getElementById('todo-input').value.trim();
+  if (!txt) return;
+  todos.push({ text: txt, done: false });
+  save();
+}
+function toggle(i) { todos[i].done = !todos[i].done; save(); }
+function del(i) { todos.splice(i,1); save(); }
+function save() {
+  localStorage.setItem('todos', JSON.stringify(todos));
+  renderTodo();
+}
+renderTodo();
+
+// Product Listing
+const products = [
+  { name:'Book A', category:'book', price:9.99 },
+  { name:'Book B', category:'book', price:14.99 },
+  { name:'Hammer', category:'tool', price:19.99 },
+  { name:'Screwdriver', category:'tool', price:7.99 }
+];
+function renderProducts() {
+  let cat = document.getElementById('catFilter').value;
+  let sort = document.getElementById('priceSort').value;
+  let list = products.filter(p => cat === 'all' || p.category === cat);
+  if (sort === 'asc') list.sort((a,b)=>a.price-b.price);
+  if (sort === 'desc') list.sort((a,b)=>b.price-a.price);
+  document.getElementById('product-list').innerHTML = list.map(p =>
+    `<div class="product"><strong>${p.name}</strong><br>$${p.price.toFixed(2)}<br><em>${p.category}</em></div>`
+  ).join('');
+}
+renderProducts();
+</script>
+
+</body>
+</html>
